@@ -20,6 +20,95 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## 2.3 Advanced Data Fetching and Rendering Strategies
+
+This project demonstrates three core rendering strategies in Next.js 14+ using the App Router.
+
+### Overview
+
+| Page | Route | Strategy | Config | Use Case |
+|------|-------|----------|--------|----------|
+| About | `/about` | **SSG** | `revalidate = false` | Static content |
+| Dashboard | `/dashboard` | **SSR** | `dynamic = 'force-dynamic'` | Real-time data |
+| Vendors | `/vendors` | **ISR** | `revalidate = 60` | Occasional updates |
+
+### 1. Static Rendering (SSG) - `/about`
+
+**What:** Page is pre-built at deployment and served identically to all users.
+
+**Why chosen for Vendorify:** The About page contains company info that rarely changes. SSG provides:
+- Instant load times (no server computation)
+- Zero server load per request
+- Maximum CDN efficiency
+
+**When data is fetched:** At build time (`next build`), before deployment.
+
+### 2. Dynamic Rendering (SSR) - `/dashboard`
+
+**What:** Page is rendered fresh on every request with real-time data.
+
+**Why chosen for Vendorify:** The Dashboard shows user-specific, time-sensitive data. SSR ensures:
+- Every user sees current data
+- No stale information
+- Personalization is possible
+
+**When data is fetched:** On every request (server-side).
+
+**Trade-off:** Slightly slower response time, but guaranteed freshness.
+
+### 3. Hybrid Rendering (ISR) - `/vendors`
+
+**What:** Page is cached and served instantly, but re-rendered in the background every N seconds.
+
+**Why chosen for Vendorify:** The Vendor list updates occasionally but doesn't need real-time accuracy. ISR provides:
+- Fast cached responses (like SSG)
+- Automatic background updates (like SSR)
+- Best of both worlds
+
+**When data is fetched:**
+- First request: at build time
+- Subsequent: from cache
+- Every 60s: background revalidation
+
+### How Caching/Revalidation Improves Performance
+
+| Strategy | Server Load | Response Time | Data Freshness |
+|----------|-------------|---------------|----------------|
+| SSG | ~0 | <10ms | Build time only |
+| SSR | High (1 req = 1 render) | 50-200ms | Always fresh |
+| ISR | Low (1 render/60s) | <10ms | 60s stale max |
+
+### Scaling to 10x More Users
+
+**SSR (Dashboard):**
+- 10,000 users = 10,000 server renders/second
+- Would need horizontal scaling, load balancing
+- Database connection pooling required
+- Consider moving non-critical data to ISR
+
+**ISR (Vendors):**
+- Still only ~1 render per 60 seconds
+- 99.98% reduction in server load vs SSR
+- Cache layer handles traffic spikes
+- Ideal for scaling
+
+**SSG (About):**
+- No change needed—static files scale infinitely
+- CDN handles all traffic
+
+### Testing the Pages
+
+```bash
+pnpm dev
+```
+
+Then visit:
+- http://localhost:3000/about (SSG)
+- http://localhost:3000/dashboard (SSR - refresh to see time change)
+- http://localhost:3000/vendors (ISR)
+
+---
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

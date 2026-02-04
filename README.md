@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vendorify - Next.js Full-Stack Application
 
-## Getting Started
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) and deployed to **AWS ECS with automated CI/CD**.
+
+## 🚀 **Production Deployment**
+
+**Live Application:** Deployed on AWS ECS Fargate with automated CI/CD pipeline
+
+### **Infrastructure Stack**
+- **Platform:** AWS ECS (Elastic Container Service) 
+- **Compute:** Fargate (serverless containers)
+- **Registry:** Amazon ECR (Elastic Container Registry)
+- **CI/CD:** GitHub Actions
+- **Scaling:** Auto-scaling with load balancing capability
+
+### **Deployment Pipeline**
+```mermaid
+graph LR
+    A[Push to main/deploy] --> B[GitHub Actions]
+    B --> C[Build & Test] 
+    C --> D[Docker Build]
+    D --> E[Push to ECR]
+    E --> F[Deploy to ECS]
+    F --> G[Health Checks]
+    G --> H[Live Application]
+```
+
+**Automated on every push to `main` or `deploy` branches:**
+1. ✅ **Build & Test** - Lint code and build application
+2. ✅ **Containerize** - Create optimized Docker image  
+3. ✅ **Deploy** - Push to ECR and update ECS service
+4. ✅ **Monitor** - Health checks ensure successful deployment
+
+---
+
+## 🛠 **Local Development**
+
+### **Prerequisites**
+- Node.js 20+
+- pnpm (recommended) or npm
+
+### **Getting Started**
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Start development server
 pnpm dev
 # or
-bun dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### **Available Scripts**
+```bash
+pnpm dev          # Development server
+pnpm build        # Production build
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm build:staging    # Build with staging environment
+pnpm build:production # Build with production environment
+```
 
-## 2.3 Advanced Data Fetching and Rendering Strategies
+---
 
-This project demonstrates three core rendering strategies in Next.js 14+ using the App Router.
+## 📊 **2.3 Advanced Data Fetching and Rendering Strategies**
 
-### Overview
+This project demonstrates three core rendering strategies in Next.js 14+ using the App Router, optimized for production deployment.
 
-| Page      | Route        | Strategy | Config                      | Use Case           |
-| --------- | ------------ | -------- | --------------------------- | ------------------ |
-| About     | `/about`     | **SSG**  | `revalidate = false`        | Static content     |
-| Dashboard | `/dashboard` | **SSR**  | `dynamic = 'force-dynamic'` | Real-time data     |
-| Vendors   | `/vendors`   | **ISR**  | `revalidate = 60`           | Occasional updates |
+### **Architecture Overview**
+
+| Page      | Route        | Strategy | Config                      | Use Case           | Deployment Impact |
+| --------- | ------------ | -------- | --------------------------- | ------------------ | ----------------- |
+| About     | `/about`     | **SSG**  | `revalidate = false`        | Static content     | Pre-built in Docker |
+| Dashboard | `/dashboard` | **SSR**  | `dynamic = 'force-dynamic'` | Real-time data     | Server-side in ECS |
+| Vendors   | `/vendors`   | **ISR**  | `revalidate = 60`           | Occasional updates | Cached in ECS |
 
 ### 1. Static Rendering (SSG) - `/about`
 
@@ -103,63 +152,156 @@ This project demonstrates three core rendering strategies in Next.js 14+ using t
 - No change needed—static files scale infinitely
 - CDN handles all traffic
 
-### Testing the Pages
+### **Testing the Pages**
 
 ```bash
+# Local development
 pnpm dev
 ```
 
 Then visit:
-
 - http://localhost:3000/about (SSG)
 - http://localhost:3000/dashboard (SSR - refresh to see time change)
 - http://localhost:3000/vendors (ISR)
 
 ---
 
-## Learn More
+## 🐳 **Docker & Containerization**
 
-To learn more about Next.js, take a look at the following resources:
+### **Multi-Stage Docker Build**
+The application uses an optimized multi-stage Docker build:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```dockerfile
+# Development dependencies → Production build → Runtime image
+Node.js 20 Alpine → Next.js standalone → Minimal production container
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Features:**
+- ✅ Multi-stage build for minimal image size
+- ✅ Non-root user for security
+- ✅ Health checks with curl
+- ✅ Optimized for Next.js standalone output
+- ✅ Production-ready configuration
 
-## Deploy on Vercel
+### **Local Docker Testing**
+```bash
+# Build the image
+docker build -t vendorify-app .
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Run locally
+docker run -p 3000:3000 vendorify-app
+```
 
 ---
 
-## Environment-Aware Builds & Secrets Management
+## ☁️ **AWS Infrastructure**
+
+### **ECS Configuration**
+- **Cluster:** `vendorify-cluster`
+- **Service:** `vendorify-service` 
+- **Task Definition:** `vendorify-task`
+- **Resources:** 0.5 vCPU, 1GB Memory
+- **Network:** VPC with Fargate launch type
+
+### **Container Specifications**
+- **Image:** `612812184105.dkr.ecr.us-east-1.amazonaws.com/vendorify-app:latest`
+- **Port:** 3000 (HTTP)
+- **Health Check:** HTTP endpoint monitoring
+- **Logging:** CloudWatch Logs (`/ecs/vendorify-app`)
+- **Environment:** Production configuration with NODE_ENV=production
+
+### **CI/CD Pipeline**
+**GitHub Actions workflow** (`.github/workflows/deploy.yml`):
+
+**Triggers:** Push to `main` or `deploy` branches
+
+**Steps:**
+1. **Build & Test**
+   - Install dependencies with pnpm
+   - Run ESLint for code quality
+   - Build Next.js application
+
+2. **Deploy** (production branches only)
+   - Configure AWS credentials
+   - Login to Amazon ECR
+   - Build and tag Docker image
+   - Push to ECR registry
+   - Update ECS task definition
+   - Deploy new service revision
+   - Wait for service stability
+
+### **Required GitHub Secrets**
+```bash
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+```
+
+---
+
+## 🔧 **Environment-Aware Builds & Secrets Management**
 
 This project supports per-environment configuration files and safe secret injection at build/runtime.
 
-### Environment Files
-
+### **Environment Files**
 The following files are included with placeholder values only:
+- `.env.development` - Local development variables
+- `.env.staging` - Staging environment configuration  
+- `.env.production` - Production environment configuration
+- `.env.example` - Template of required variables
 
-- .env.development
-- .env.staging
-- .env.production
-- .env.example (template of required variables)
+### **Build Commands**
+```bash
+pnpm build:staging     # Build with staging config
+pnpm build:production  # Build with production config
+```
 
-Next.js automatically loads .env.development for local development. For staging and production builds, use the dedicated scripts below.
+### **Secrets Management in Production**
+**🚨 No secrets committed to Git** - Real secrets are injected via:
 
-### Build Commands
+**AWS Production:**
+- **GitHub Actions:** Repository secrets for CI/CD
+- **AWS Parameter Store:** Runtime secrets via ECS task definition
+- **Environment Variables:** Injected at container startup
 
-- npm run build:staging
-- npm run build:production
+**Security Best Practices:**
+- ✅ Secrets stored in AWS Parameter Store/Secrets Manager
+- ✅ IAM roles for service-to-service authentication  
+- ✅ No hardcoded credentials in code or Docker images
+- ✅ Least-privilege access patterns
 
-### External Secrets (No Secrets in Git)
+---
 
-Do not commit real secrets. Instead, inject them via your existing CI/CD:
+## 📚 **Learn More**
 
-- GitHub Actions: use repository or environment secrets and pass them as environment variables during build/deploy.
-- AWS Parameter Store: pull parameters at build/runtime and export to the process environment.
-- Azure Key Vault: retrieve secrets in pipeline steps or at runtime and export to the process environment.
+### **Next.js Resources**
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js GitHub repository](https://github.com/vercel/next.js) - feedback and contributions welcome!
 
-Only the placeholder files are stored in the repo. Real secrets are loaded from your secret manager during build or runtime.
+### **AWS Resources**
+- [ECS Documentation](https://docs.aws.amazon.com/ecs/) - container orchestration
+- [Fargate Guide](https://docs.aws.amazon.com/AmazonECS/latest/userguide/what-is-fargate.html) - serverless containers
+- [ECR Documentation](https://docs.aws.amazon.com/ecr/) - container registry
+
+### **DevOps Resources**
+- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD automation
+- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/) - containerization guides
+
+---
+
+## 🚀 **Deployment Status**
+
+**Current Environment:** Production  
+**Last Deployed:** Automatic via GitHub Actions  
+**Health Status:** Monitored via ECS health checks  
+**Logs:** Available in CloudWatch (`/ecs/vendorify-app`)
+
+**To deploy changes:**
+1. Push to `main` or `deploy` branch
+2. GitHub Actions automatically builds and deploys
+3. ECS performs rolling deployment with zero downtime
+4. Health checks ensure successful deployment
+
+---
+
+*Built with ❤️ using Next.js, Docker, and AWS ECS*

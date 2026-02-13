@@ -1,0 +1,10 @@
+{
+  "extends": ["next/core-web-vitals", "plugin:prettier/recommended"],
+  "rules": {
+    "no-console": "warn",
+    "semi": ["error", "always"],
+    "quotes": ["error", "double"],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}

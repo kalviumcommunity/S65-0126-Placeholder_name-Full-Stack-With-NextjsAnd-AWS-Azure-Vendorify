@@ -144,7 +144,40 @@ To view your application:
 1. Run `npm run dev`
 2. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-![Placeholder for screenshot](./public/screenshot.png)
+---
+
+## ✨ Code Quality & Consistency
+
+This project uses strict TypeScript, ESLint, Prettier, and pre-commit hooks to ensure clean, consistent code.
+
+### Quick Start
+
+```bash
+# Install quality tools
+npm install --save-dev eslint prettier eslint-config-next eslint-plugin-prettier eslint-config-prettier
+
+# Set up pre-commit hooks
+npx husky-init && npm install
+npm install --save-dev lint-staged
+npx husky add .husky/pre-commit "npx lint-staged"
+```
+
+### Available Commands
+
+```bash
+npm run lint       # Check code for issues
+npm run lint:fix   # Auto-fix lint issues
+npm run format     # Auto-format all files
+```
+
+### What's Configured
+
+- **Strict TypeScript** — Catches type errors before runtime
+- **ESLint** — Enforces code quality rules (double quotes, semicolons, no unused vars)
+- **Prettier** — Auto-formats code consistently
+- **Pre-commit hooks** — Blocks commits with style/type errors
+
+See [README_SPRINT2_9.md](README_SPRINT2_9.md) for detailed explanation and [TYPESCRIPT_ESLINT_SETUP.md](TYPESCRIPT_ESLINT_SETUP.md) for testing guide.
 
 ---
 

@@ -1,77 +1,164 @@
-# Vendorify - Next.js Full-Stack Application
+# Vendorify
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) and deployed to **AWS ECS with automated CI/CD**.
+## 📋 Project Overview
 
-## 🚀 **Production Deployment**
+**Vendorify** is a Next.js 13+ TypeScript web application built with a clean, scalable folder structure. This project demonstrates modern web development best practices and serves as a foundation for future feature development.
 
-**Live Application:** Deployed on AWS ECS Fargate with automated CI/CD pipeline
-
-### **Infrastructure Stack**
-- **Platform:** AWS ECS (Elastic Container Service) 
-- **Compute:** Fargate (serverless containers)
-- **Registry:** Amazon ECR (Elastic Container Registry)
-- **CI/CD:** GitHub Actions
-- **Scaling:** Auto-scaling with load balancing capability
-
-### **Deployment Pipeline**
-```mermaid
-graph LR
-    A[Push to main/deploy] --> B[GitHub Actions]
-    B --> C[Build & Test] 
-    C --> D[Docker Build]
-    D --> E[Push to ECR]
-    E --> F[Deploy to ECS]
-    F --> G[Health Checks]
-    G --> H[Live Application]
-```
-
-**Automated on every push to `main` or `deploy` branches:**
-1. ✅ **Build & Test** - Lint code and build application
-2. ✅ **Containerize** - Create optimized Docker image  
-3. ✅ **Deploy** - Push to ECR and update ECS service
-4. ✅ **Monitor** - Health checks ensure successful deployment
+**Problem Statement (Placeholder):**
+A vendor management platform that helps businesses discover and connect with service providers, streamlining vendor relationships and improving business operations.
 
 ---
 
-## 🛠 **Local Development**
+## 📁 Folder Structure
 
-### **Prerequisites**
-- Node.js 20+
-- pnpm (recommended) or npm
+```
+src/
+├── app/          # Next.js App Router - pages and routes
+├── components/   # Reusable React components
+└── lib/          # Utilities, helpers, and configurations
 
-### **Getting Started**
+public/          # Static assets (images, icons, etc.)
+.gitignore       # Git exclusions
+package.json     # Dependencies and scripts
+tsconfig.json    # TypeScript configuration
+next.config.ts   # Next.js configuration
+```
 
-First, run the development server:
+---
+
+## 📖 Folder Explanations
+
+### `src/app/`
+- Contains all your routes and page components
+- Uses Next.js App Router for all pages
+- Each folder represents a route (e.g., `src/app/dashboard/page.tsx` creates `/dashboard`)
+- Place layouts, root templates, and page components here
+
+### `src/components/`
+- Stores reusable UI components
+- Keep components small and focused (single responsibility)
+- Examples: Button, Header, Card, Footer, Sidebar
+- Each component should handle one specific task
+
+### `src/lib/`
+- Utility functions and helper code
+- API client functions and configuration
+- Pure functions for data formatting and validation
+- Constants and configuration values
+- Should contain no React components
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18.17+ or later
+- npm, yarn, pnpm, or bun package manager
+
+### Installation
 
 ```bash
-# Install dependencies
-pnpm install
+npm install
+```
 
-# Start development server
-pnpm dev
+Or with yarn, pnpm, or bun:
+
+```bash
+yarn install
 # or
+pnpm install
+# or
+bun install
+```
+
+### Run Development Server
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application running.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The app will automatically reload when you make changes to your code.
 
-### **Available Scripts**
+### Build for Production
+
 ```bash
-pnpm dev          # Development server
-pnpm build        # Production build
-pnpm start        # Start production server
-pnpm lint         # Run ESLint
-pnpm build:staging    # Build with staging environment
-pnpm build:production # Build with production environment
+npm run build
+npm start
 ```
 
 ---
 
-## 📊 **2.3 Advanced Data Fetching and Rendering Strategies**
+## 📚 Key Files
 
-This project demonstrates three core rendering strategies in Next.js 14+ using the App Router, optimized for production deployment.
+| File | Purpose |
+|------|---------|
+| `next.config.ts` | Next.js configuration |
+| `tsconfig.json` | TypeScript compiler options |
+| `package.json` | Project dependencies and scripts |
+| `src/app/layout.tsx` | Root layout component |
+| `src/app/page.tsx` | Home page |
+
+---
+
+## 💡 Why This Structure?
+
+### ✅ Clarity
+- Every file has a clear, predictable location
+- New developers can find code quickly
+- Clear separation between UI components, routes, and utilities
+- Reduced cognitive load when navigating the codebase
+
+### ✅ Scalability
+- Easy to add new pages without disrupting existing code
+- Reusable components reduce code duplication
+- Utility functions are centralized and easy to maintain
+- Structure supports growth without major reorganization
+
+### ✅ Team Collaboration
+- Consistent naming conventions reduce confusion
+- Different team members can work on different folders independently
+- Clear patterns make code reviews easier
+- New team members can onboard faster
+
+---
+
+## 🔄 Future Sprints
+
+This foundation is ready for:
+- Adding API routes and backend logic
+- Building complex UI components
+- Implementing authentication and user accounts
+- Adding state management (Context, Redux, Zustand)
+- Setting up testing frameworks
+- Building admin and user dashboards
+- Deploying to production
+
+---
+
+## 📸 Screenshot
+
+To view your application:
+
+1. Run `npm run dev`
+2. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+![Placeholder for screenshot](./public/screenshot.png)
+
+---
+
+## 📚 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs) - Next.js features and API reference
+- [React Documentation](https://react.dev) - React fundamentals and best practices
+- [TypeScript Handbook](https://www.typescriptlang.org/docs) - TypeScript essentials
+- [Web Development Best Practices](https://developer.mozilla.org/en-US/docs/Web) - MDN Web Docs
+
+---
+
+
+
 
 ### **Architecture Overview**
 

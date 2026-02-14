@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vendorify-app
+    ports:
+      - "3000:3000"
+    environment:
+      # Next.js Configuration
+      NODE_ENV: development
+      PORT: 3000
+      
+      # Database Configuration
+      DATABASE_URL: postgresql://vendorify_user:vendorify_password@postgres:5432/vendorify_db
+      
+      # Redis Configuration
+      REDIS_URL: redis://redis:6379
+      
+      # Optional: Add other environment variables as needed
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    networks:
+      - vendorify-network
+    
+    # Optional: Restart policy for production-like behavior
+    restart: unless-stopped
+    
+    # Optional: Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: vendorify-postgres
+    environment:
+      POSTGRES_USER: vendorify_user
+      POSTGRES_PASSWORD: vendorify_password
+      POSTGRES_DB: vendorify_db
+    
+    ports:
+      - "5432:5432"
+    
+    volumes:
+      # Named volume for data persistence
+      - postgres_data:/var/lib/postgresql/data
+    
+    networks:
+      - vendorify-network
+    
+    restart: unless-stopped
+    
+    # Health check to verify database is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendorify_user -d vendorify_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: vendorify-redis
+    command: redis-server --appendonly yes
+    
+    ports:
+      - "6379:6379"
+    
+    volumes:
+      # Optional: Named volume for Redis persistence
+      - redis_data:/data
+    
+    networks:
+      - vendorify-network
+    
+    restart: unless-stopped
+    
+    # Health check to verify Redis is ready
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Network for service communication
+networks:
+  vendorify-network:
+    driver: bridge

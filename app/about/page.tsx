@@ -14,6 +14,8 @@
  * that don't need real-time updates.
  */
 
+import Link from "next/link";
+
 export const revalidate = false; // Explicitly disable revalidation (true SSG)
 
 async function getAboutData() {
@@ -63,7 +65,7 @@ export default async function AboutPage() {
       </div>
 
       <nav style={{ marginTop: '2rem' }}>
-        <a href="/">← Home</a> | <a href="/dashboard">Dashboard (SSR) →</a>
+        <Link href="/">← Home</Link> | <Link href="/dashboard">Dashboard (SSR) →</Link>
       </nav>
     </div>
   );

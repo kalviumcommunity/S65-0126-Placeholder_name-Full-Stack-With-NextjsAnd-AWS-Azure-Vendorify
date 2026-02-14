@@ -425,3 +425,59 @@ pnpm build:production  # Build with production config
 ---
 
 *Built with ❤️ using Next.js, Docker, and AWS ECS*
+
+---
+
+## Environment Variable Management
+
+Purpose
+- Use environment variables to keep configuration and secrets out of source code.
+
+Server-side vs Client-side
+- Server-side variables (example: `DATABASE_URL`) must never be exposed to the browser. They are available only to server code and should be set without the `NEXT_PUBLIC_` prefix.
+- Client-side variables (example: `NEXT_PUBLIC_API_BASE_URL`) must be prefixed with `NEXT_PUBLIC_` so Next.js includes them in browser bundles.
+
+Quick examples
+- Safe server-side usage (server components, API routes, or server-only modules):
+
+```ts
+const dbUrl = process.env.DATABASE_URL;
+```
+
+- Safe client-side usage (client components or browser code):
+
+```ts
+const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+```
+
+Why keep server secrets out of client components
+- Anything used in client components is included in the bundle and can be inspected by anyone. Server secrets must never be put into client code to avoid leaks and security breaches.
+
+What happens if you forget `NEXT_PUBLIC_`
+- If you omit the `NEXT_PUBLIC_` prefix for a client-facing variable, Next.js will not expose it to the browser. `process.env.VAR_NAME` will be `undefined` in client code.
+
+Runtime vs Build-time
+- Next.js loads `.env` files at build and at runtime (depending on hosting). Variables used in client bundles are baked in at build time. Keep this in mind if changing env values after deployment — you may need to rebuild.
+
+How to replicate locally
+1. Copy the template: `cp .env.example .env.local`
+2. Edit `.env.local` and fill in real values (do not commit `.env.local`).
+
+Security best practices (student-friendly)
+- Never commit `.env.local` or real secrets to the repo.
+- Use `.env.example` to document required variables without sharing secrets.
+- For production, inject secrets via your hosting provider's secure environment settings.
+
+Common mistakes to avoid
+- Putting `DATABASE_URL` or other secrets in client components.
+- Forgetting the `NEXT_PUBLIC_` prefix for variables you expect to use in the browser.
+- Committing `.env.local` or other secret files to git (use `.gitignore`).
+
+Validation checklist
+- `.env.local` is not committed and remains listed in `.gitignore`.
+- `.env.example` exists and documents required variables.
+- Server-only secrets (like `DATABASE_URL`) are not used in client code.
+- Client variables use the `NEXT_PUBLIC_` prefix when they must be available in the browser.
+
+Short explanation
+- Keep secrets on the server and public configuration in `NEXT_PUBLIC_` variables. Use `.env.example` to share what needs to be set, and keep `.env.local` out of source control.

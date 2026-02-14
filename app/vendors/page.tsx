@@ -19,6 +19,15 @@
  * or any content that updates occasionally.
  */
 
+import Link from "next/link";
+
+interface Vendor {
+  id: number;
+  name: string;
+  email: string;
+  website: string;
+}
+
 export const revalidate = 60; // Re-render page every 60 seconds
 export const dynamic = 'auto'; // Allow ISR (default behavior)
 
@@ -58,7 +67,7 @@ export default async function VendorsPage() {
 
       <h2>Active Vendors</h2>
       <div>
-        {vendors.map((vendor: any) => (
+        {vendors.map((vendor: Vendor) => (
           <div key={vendor.id} style={{ 
             border: '1px solid #ddd', 
             padding: '1rem', 
@@ -87,7 +96,7 @@ export default async function VendorsPage() {
       </div>
 
       <nav style={{ marginTop: '2rem' }}>
-        <a href="/">← Home</a> | <a href="/about">About (SSG)</a> | <a href="/dashboard">Dashboard (SSR)</a>
+        <Link href="/">← Home</Link> | <Link href="/about">About (SSG)</Link> | <Link href="/dashboard">Dashboard (SSR)</Link>
       </nav>
     </div>
   );

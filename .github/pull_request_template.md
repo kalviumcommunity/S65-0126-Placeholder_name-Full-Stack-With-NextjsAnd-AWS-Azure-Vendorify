@@ -1,103 +1,73 @@
 ## 📝 Summary
 
-This PR implements **Sprint 1: Project Initialization & Folder Structure** for the Vendorify project. It establishes a clean, scalable project architecture suitable for team collaboration and future feature development.
+<!-- Write a clear, concise description of what this PR does -->
+<!-- Focus on the "what" and "why", not the "how" -->
 
-### What's Implemented
+## 🎯 Changes Made
 
-- ✅ **Folder Structure** - Created `src/` directory with organized subfolders:
-  - `src/app/` - Next.js App Router routes and pages
-  - `src/components/` - Reusable UI components
-  - `src/lib/` - Utilities, helpers, and configurations
+<!-- List the main changes, bullet points preferred -->
 
-- ✅ **.gitignore** - Updated with comprehensive rules for Next.js, TypeScript, and Node.js projects
+- [ ] 
+- [ ] 
 
-- ✅ **README.md** - Clean, student-friendly documentation including:
-  - Project overview and problem statement
-  - Detailed folder structure explanation
-  - Setup and installation instructions
-  - Reflection on architectural decisions and scalability benefits
+## 📸 Screenshots / Evidence
 
-- ✅ **README Files** - Added guidance documents in each folder explaining best practices and conventions
-
-- ✅ **PR Template** - Established standardized pull request descriptions for future contributions
-
----
-
-## 🎯 Why This Structure?
-
-### Clarity
-- Predictable file locations make code discovery instant
-- Clear separation of concerns (routes, components, utilities)
-- Easy onboarding for new team members
-
-### Scalability
-- Easy to add new features without disrupting existing code
-- Reusable components reduce duplication
-- Supports growth to larger teams
-
-### Team Collaboration
-- Consistent naming conventions reduce confusion
-- Multiple team members can work on different folders independently
-- Clear patterns make code reviews faster and more effective
-
----
-
-## 📸 Screenshot Placeholder
-
-To see the application running:
-
-1. Install dependencies: `npm install`
-2. Start dev server: `npm run dev`
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-_Include a screenshot here showing the Next.js welcome page_
-
----
+<!-- If your changes affect the UI, include screenshots -->
+<!-- For non-UI changes, describe how to test or verify -->
 
 ## ✅ Checklist
 
-- [x] Folder structure created (`src/app`, `src/components`, `src/lib`)
-- [x] .gitignore updated for Next.js + TypeScript
-- [x] README.md created with clear documentation
-- [x] Folder README files added with guidelines
-- [x] PR template established for future sprints
-- [x] Naming conventions documented
-- [x] Setup instructions provided
+Before requesting review, ensure:
+
+- [ ] **Code Quality**
+  - [ ] Ran `npm run lint` — no new ESLint errors
+  - [ ] Ran `npm run lint:fix` to auto-fix issues
+  - [ ] Ran `npm run format` — code is properly formatted
+  - [ ] All TypeScript errors are resolved (`npm run build` succeeds)
+
+- [ ] **Testing & Functionality**
+  - [ ] Feature works locally (`npm run dev`)
+  - [ ] No new console errors or warnings
+  - [ ] Changes don't break existing features
+  - [ ] Tested in multiple browsers if UI changes
+
+- [ ] **Code Structure**
+  - [ ] Code follows folder structure conventions
+  - [ ] Naming conventions are consistent
+  - [ ] Components are in `src/components/`
+  - [ ] Utilities are in `src/lib/`
+  - [ ] Routes/pages are in `src/app/`
+
+- [ ] **Security & Best Practices**
+  - [ ] No sensitive data (API keys, passwords) exposed
+  - [ ] No `console.log()` statements left in code
+  - [ ] Environment variables use `NEXT_PUBLIC_` prefix if client-side
+  - [ ] No hardcoded URLs or config values
+
+- [ ] **Documentation**
+  - [ ] Comments explain "why", not "what"
+  - [ ] Updated README if behavior changed
+  - [ ] Added type annotations where needed
+
+- [ ] **Git Hygiene**
+  - [ ] Branch follows naming convention (`feature/*`, `fix/*`, `chore/*`, `docs/*`)
+  - [ ] Commit messages are clear and descriptive
+  - [ ] No unnecessary files committed (`.DS_Store`, `node_modules`, etc.)
+
+## 🔗 Related Issue
+
+<!-- Link to the issue this PR closes, if applicable -->
+Closes #123 (replace with actual issue number)
+
+## 💡 Additional Notes
+
+<!-- Add any context, decisions, or discussion points -->
+<!-- Mention if you need guidance on any aspect -->
+<!-- Share any challenges or interesting solutions -->
 
 ---
 
-## 🚀 Next Steps
-
-For future sprints, this foundation supports:
-- Adding reusable UI components to `src/components/`
-- Creating API routes and data fetching logic in `src/lib/`
-- Implementing feature routes in `src/app/`
-- Adding tests and CI/CD workflows
-- Scaling with team members
-
----
-
-## 📋 Testing
-
-To verify the setup locally:
-
-```bash
-npm install
-npm run dev
-# Navigate to http://localhost:3000
-```
-
-The application should start without errors. All pages should be accessible and the dev server should hot-reload on file changes.
-
----
-
-## 🔍 Code Review Focus
-
-Reviewers should verify:
-- Folder structure matches the documentation
-- .gitignore is comprehensive and correct
-- README instructions are clear and working
-- Naming conventions are consistently applied
+**Ready for review:** ✅
 
 ---
 

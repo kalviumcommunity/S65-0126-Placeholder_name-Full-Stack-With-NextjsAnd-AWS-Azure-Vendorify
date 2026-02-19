@@ -765,6 +765,108 @@ docker run -p 3000:3000 vendorify-app
 
 ---
 
+## 🗄️ **Database Schema Design**
+
+### **Overview**
+The application uses PostgreSQL as the primary database, managed through Prisma ORM. The schema is normalized (3NF compliant) to prevent data redundancy and maintain referential integrity.
+
+### **Core Entities & Relationships**
+
+```
+User (1) ──→ (N) Project
+      ↓
+   Creates/Assigns (N) Task
+      ↓
+   Authors (N) Comment
+```
+
+| Entity | Purpose | Key Fields |
+|--------|---------|-----------|
+| **User** | System users and accounts | `id`, `email` (unique), `name`, `role` |
+| **Project** | Container for tasks | `id`, `name`, `ownerId`, `description` |
+| **Task** | Work items with status | `id`, `title`, `status` (enum), `projectId` |
+| **Comment** | Discussion on tasks | `id`, `body`, `taskId` |
+
+### **Key Constraints & Features**
+
+- **Primary Keys:** `@id @default(autoincrement())` on all models
+- **Unique Constraints:** `email` on `User`; composite `(ownerId, name)` on `Project`
+- **Foreign Keys:** Proper relations with `onDelete: Cascade` (owned data) and `onDelete: SetNull` (optional references)
+- **Enums:** `TaskStatus` (TODO, IN_PROGRESS, DONE, BLOCKED) for type-safe status tracking
+- **Timestamps:** `createdAt` (auto-set) and `updatedAt` (auto-updated) on all models
+- **Indexes:** Composite index on `(projectId, status)` for fast task filtering; individual indexes on foreign keys
+
+### **Normalization: 1NF, 2NF, 3NF**
+
+✅ **First Normal Form (1NF):** All columns contain atomic, indivisible values. No arrays or repeating groups.  
+✅ **Second Normal Form (2NF):** Single-column primary keys eliminate partial dependencies.  
+✅ **Third Normal Form (3NF):** No transitive dependencies; related data stored in separate tables, not denormalized.
+
+### **Why This Schema Scales**
+
+- **Proper Indexing:** Composite index on common query filters (projectId + status)
+- **No Denormalization:** Single source of truth; no stale copies of data
+- **Referential Integrity:** Foreign keys enforce correctness; migrations are safe
+- **Type Safety:** Enums are compact and indexable; Prisma generates TypeScript types
+
+### **Most Common Queries**
+
+```typescript
+// List all projects for a user
+SELECT * FROM Project WHERE ownerId = ?
+
+// Get tasks by project and status (paginated)
+SELECT * FROM Task WHERE projectId = ? AND status = ? 
+ORDER BY priority DESC LIMIT ? OFFSET ?
+
+// Get tasks assigned to a user
+SELECT * FROM Task WHERE assignedToId = ?
+
+// Task detail with all related data (comments, creator, assignee)
+SELECT * FROM Task 
+JOIN Comment ON Comment.taskId = Task.id
+JOIN User creator ON Task.creatorId = creator.id
+JOIN User assignee ON Task.assignedToId = assignee.id
+WHERE Task.id = ?
+```
+
+### **Getting Started with Prisma**
+
+```bash
+# 1. Install Prisma and client
+pnpm add -D prisma @prisma/client
+
+# 2. Initialize the schema (creates tables in PostgreSQL)
+npx prisma migrate dev --name init_schema
+
+# 3. Generate TypeScript types
+npx prisma generate
+
+# 4. (Optional) Seed with test data
+npx prisma db seed
+
+# 5. View/edit data visually
+npx prisma studio
+```
+
+### **Schema Location & Documentation**
+
+| File | Purpose |
+|------|---------|
+| [`prisma/schema.prisma`](prisma/schema.prisma) | Complete data model |
+| [`prisma/seed.ts`](prisma/seed.ts) | Initial data population |
+| [`SPRINT2_13_DATABASE_SCHEMA.md`](SPRINT2_13_DATABASE_SCHEMA.md) | Full normalization & design rationale |
+
+### **Mistakes to Avoid**
+
+- ❌ Storing relational data as JSON (use proper foreign keys)
+- ❌ Skipping foreign keys (no referential integrity)
+- ❌ Unnecessary many-to-many tables for simple 1:N relationships
+- ❌ Duplicating user/project data across rows (denormalization)
+- ❌ Using boolean for multi-state fields (use `enum` instead)
+
+---
+
 ## ☁️ **AWS Infrastructure**
 
 ### **ECS Configuration**

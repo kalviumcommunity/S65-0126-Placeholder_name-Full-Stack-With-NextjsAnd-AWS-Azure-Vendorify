@@ -90,7 +90,164 @@ npm start
 
 ---
 
-## 📚 Key Files
+## �️ Prisma ORM Setup & Database Integration
+
+### Why Prisma?
+
+Prisma provides **type-safe database access** with **zero boilerplate**. Instead of writing SQL queries, you get:
+- ✅ **Auto-generated TypeScript types** - Catch database errors at compile time, not runtime
+- ✅ **Intuitive query syntax** - Read and write queries that look like JavaScript
+- ✅ **Migration management** - Version control for your database schema
+- ✅ **Developer experience** - IntelliSense auto-completion in your IDE
+
+### Setup Steps
+
+```bash
+# 1. Install Prisma and Prisma Client
+npm install prisma --save-dev
+npm install @prisma/client
+
+# 2. Create your first migration
+npx prisma migrate dev --name init_schema
+
+# 3. Generate Prisma Client types
+npx prisma generate
+
+# 4. (Optional) Open Prisma Studio GUI to view database
+npx prisma studio
+```
+
+### Schema Overview
+
+Your database schema includes:
+
+```prisma
+// User model - represents app users
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  name      String?
+  role      String  @default("USER")
+  
+  projects  Project[]   @relation("UserProjects")
+  tasks     Task[]      @relation("TaskCreator")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// Project model - owned by users
+model Project {
+  id          Int     @id @default(autoincrement())
+  name        String
+  owner       User    @relation("UserProjects", fields: [ownerId], references: [id])
+  ownerId     Int
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Task model - belongs to projects
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  status      TaskStatus @default(TODO)
+  project     Project   @relation(fields: [projectId], references: [id])
+  projectId   Int
+  assignedTo  User?     @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  assignedToId Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+```
+
+### Prisma Client Initialization
+
+Create a singleton instance in `src/lib/prisma.ts`:
+
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
+```
+
+**Why the singleton pattern?** During development, Next.js hot-reloads files on changes. Without this pattern, each reload would create a new PrismaClient instance, exhausting your database connections.
+
+### Using Prisma in Your App
+
+```typescript
+// src/lib/queries.ts - Server-side utilities
+import { prisma } from './prisma';
+
+export async function getUsers() {
+  return await prisma.user.findMany();
+}
+
+export async function getUserProjects(userId: number) {
+  return await prisma.project.findMany({
+    where: { ownerId: userId },
+    include: { tasks: true }
+  });
+}
+```
+
+Use these functions in **Server Components** or **API Routes**:
+
+```typescript
+// app/dashboard/page.tsx - Server Component
+import { getUsers } from '@/lib/queries';
+
+export default async function Dashboard() {
+  const users = await getUsers();
+  return <div>{/* Render users */}</div>;
+}
+```
+
+### Verify Connection
+
+Test your database connection:
+
+```bash
+# Open Prisma Studio GUI
+npx prisma studio
+
+# Or run a quick test in Terminal
+node -e "const {prisma} = require('./src/lib/prisma'); prisma.user.findMany().then(u => console.log(u))"
+```
+
+### Environment Variables
+
+Add to `.env.local`:
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/database_name?schema=public"
+```
+
+### 🎓 Key Learnings: Type Safety & Developer Productivity
+
+Prisma transforms database development:
+
+| Without Prisma | With Prisma |
+|---|---|
+| Writing raw SQL | Type-safe JavaScript queries |
+| Manual TypeScript interfaces | Auto-generated types |
+| Runtime errors for schema mismatches | Compile-time type checking |
+| Manual migration files | Version-controlled migrations |
+| Guessing query results | Autocomplete in your editor |
+
+This means **fewer bugs**, **faster development**, and **better code quality** - especially valuable when learning backend development!
+
+---
+
+## �📚 Key Files
 
 | File | Purpose |
 |------|---------|

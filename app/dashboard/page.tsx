@@ -97,7 +97,7 @@ export default async function DashboardPage() {
         {/* Welcome */}
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Welcome back, {user.name.split(' ')[0]} í±‹
+            Welcome back, {user.name.split(' ')[0]} !
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             Manage your railway stall vendor applications and uploaded certificates.

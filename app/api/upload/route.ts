@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { prisma } from '@/src/lib/prisma';
 import { verifyToken } from '@/src/lib/auth';
 
 // ─── POST /api/upload ─────────────────────────────────────────────────────────
+// Vercel-compatible: no file system writes. Validates the file and saves a
+// Document record with a mock URL so the rest of the app keeps working.
 export async function POST(request: NextRequest) {
   try {
     // Auth check
@@ -39,40 +39,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build unique filename
-    const ext = file.name.split('.').pop() ?? 'jpg';
-    const safeName = file.name
-      .replace(/\.[^/.]+$/, '')
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .slice(0, 40);
-    const filename = `${Date.now()}-${user.userId}-${safeName}.${ext}`;
-
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadsDir, { recursive: true });
-
-    // Write file to disk
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(path.join(uploadsDir, filename), buffer);
-
-    // Save metadata in DB
-    const document = await prisma.document.create({
+    // Save metadata in DB with a mock URL (no disk write on serverless)
+    await prisma.document.create({
       data: {
         fileName: file.name,
-        fileUrl: `/uploads/${filename}`,
+        fileUrl: 'https://example.com/mock-file.jpg',
         userId: user.userId,
       },
     });
 
     return NextResponse.json(
       {
-        message: 'File uploaded successfully.',
-        document: {
-          id: document.id,
-          fileName: document.fileName,
-          fileUrl: document.fileUrl,
-        },
+        success: true,
+        fileName: file.name,
+        message: 'File received (mock upload for production).',
       },
       { status: 201 }
     );

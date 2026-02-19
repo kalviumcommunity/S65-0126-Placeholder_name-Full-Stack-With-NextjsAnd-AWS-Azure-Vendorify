@@ -1,18 +1,26 @@
 import { PrismaClient } from '@prisma/client';
 
-// Prevent multiple PrismaClient instances in development
-// In development, the Next.js dev server restarts on file changes,
-// which would create new PrismaClient instances if we didn't use this pattern.
-// In production, we only have one instance anyway.
+// Extend globalThis type so TypeScript strict mode doesn't complain.
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// In serverless environments (Vercel) every cold-start imports this module
+// fresh, so a bare `new PrismaClient()` is fine for production. In development,
+// Next.js hot-reload re-evaluates modules on every change — without the
+// globalThis cache this would exhaust the PostgreSQL connection pool quickly.
+const prismaClientSingleton = () =>
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'error', 'warn']
+        : ['error'],
+  });
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient();
+export const prisma: PrismaClient =
+  globalThis.prisma ?? prismaClientSingleton();
 
-// Only use globalThis in development to prevent multiple instances
-// During development, the module is re-evaluated on hot reload
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  globalThis.prisma = prisma;
 }

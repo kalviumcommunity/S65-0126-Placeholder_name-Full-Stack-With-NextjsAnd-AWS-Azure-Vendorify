@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('í¼± Seeding database...');
+  console.log(' Seeding database...');
 
   // Clean up existing data
   await prisma.vendorApplication.deleteMany();
@@ -59,7 +59,7 @@ async function main() {
   });
   console.log('âœ… Vendor applications created');
 
-  console.log('\ní¾‰ Seed completed!');
+  console.log('\n Seed completed!');
   console.log('Demo accounts:');
   console.log('  Email: alice@vendorify.com  Password: password123');
   console.log('  Email: bob@vendorify.com    Password: password123');

@@ -1,118 +1,65 @@
 import { prisma } from './prisma';
 
 /**
- * Example: Get all users from the database
- * This function can be used in Server Components or API Routes
+ * Get all vendor applications for a specific user
  */
-export async function getUsers() {
+export async function getVendorApplicationsByUser(userId: number) {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-      },
+    const applications = await prisma.vendorApplication.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
-    return users;
+    return applications;
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching vendor applications:', error);
     throw error;
   }
 }
 
 /**
- * Example: Get a specific user by email
+ * Get a single vendor application by ID
  */
-export async function getUserByEmail(email: string) {
+export async function getVendorApplicationById(id: number) {
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        projects: true,
-        createdTasks: true,
-      },
+    const application = await prisma.vendorApplication.findUnique({
+      where: { id },
+      include: { user: { select: { id: true, name: true, email: true } } },
     });
-    return user;
+    return application;
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('Error fetching vendor application:', error);
     throw error;
   }
 }
 
 /**
- * Example: Create a new user
+ * Create a new vendor application
  */
-export async function createUser(email: string, name: string) {
+export async function createVendorApplication(
+  userId: number,
+  vendorName: string,
+  stallType: string,
+  licenseNumber: string
+) {
   try {
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        name,
-        role: 'USER',
-      },
+    const application = await prisma.vendorApplication.create({
+      data: { userId, vendorName, stallType, licenseNumber },
     });
-    return newUser;
+    return application;
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error('Error creating vendor application:', error);
     throw error;
   }
 }
 
 /**
- * Example: Get all projects for a user
+ * Find a user by email
  */
-export async function getUserProjects(userId: number) {
+export async function findUserByEmail(email: string) {
   try {
-    const projects = await prisma.project.findMany({
-      where: { ownerId: userId },
-      include: {
-        tasks: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-          },
-        },
-      },
-    });
-    return projects;
+    return await prisma.user.findUnique({ where: { email } });
   } catch (error) {
-    console.error('Error fetching projects:', error);
-    throw error;
-  }
-}
-
-/**
- * Example: Get all tasks for a project
- */
-export async function getProjectTasks(projectId: number) {
-  try {
-    const tasks = await prisma.task.findMany({
-      where: { projectId },
-      include: {
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-    return tasks;
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error finding user by email:', error);
     throw error;
   }
 }

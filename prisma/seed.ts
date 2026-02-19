@@ -1,61 +1,73 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("ðŸŒ± Seeding database...");
+  console.log('í¼± Seeding database...');
 
-  // 1. Create a user
-  const user = await prisma.user.create({
+  // Clean up existing data
+  await prisma.vendorApplication.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Create demo users
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
+  const alice = await prisma.user.create({
     data: {
-      email: "alice@example.com",
-      name: "Alice Example",
-      role: "USER",
+      name: 'Alice Demo',
+      email: 'alice@vendorify.com',
+      password: hashedPassword,
     },
   });
-  console.log("âœ… User created:", user.email);
+  console.log('âœ… User created:', alice.email);
 
-  // 2. Create a project owned by the user
-  const project = await prisma.project.create({
+  const bob = await prisma.user.create({
     data: {
-      name: "Demo Project",
-      description: "A seeded demo project to explore the schema",
-      ownerId: user.id,
+      name: 'Bob Vendor',
+      email: 'bob@vendorify.com',
+      password: hashedPassword,
     },
   });
-  console.log("âœ… Project created:", project.name);
+  console.log('âœ… User created:', bob.email);
 
-  // 3. Create 2 tasks linked to the project
-  const tasks = await prisma.task.createMany({
+  // Create vendor applications
+  await prisma.vendorApplication.createMany({
     data: [
       {
-        title: "Initialize repository",
-        description: "Set up Git repo, add README, and basic CI/CD tooling",
-        projectId: project.id,
-        creatorId: user.id,
-        assignedToId: user.id,
-        status: "TODO",
-        priority: 1,
+        vendorName: "Alice's Fresh Produce",
+        stallType: 'Food & Produce',
+        licenseNumber: 'LIC-2024-001',
+        status: 'Approved',
+        userId: alice.id,
       },
       {
-        title: "Add authentication",
-        description: "Implement user login with JWT and secure password hashing",
-        projectId: project.id,
-        creatorId: user.id,
-        // Intentionally not assigned to show that assignedToId can be null
-        status: "TODO",
-        priority: 2,
+        vendorName: "Alice's Bakery Corner",
+        stallType: 'Bakery',
+        licenseNumber: 'LIC-2024-002',
+        status: 'Pending',
+        userId: alice.id,
+      },
+      {
+        vendorName: "Bob's Electronics Stall",
+        stallType: 'Electronics',
+        licenseNumber: 'LIC-2024-003',
+        status: 'Pending',
+        userId: bob.id,
       },
     ],
   });
-  console.log(`âœ… ${tasks.count} tasks created`);
+  console.log('âœ… Vendor applications created');
 
-  console.log("ðŸŽ‰ Seed completed successfully!");
+  console.log('\ní¾‰ Seed completed!');
+  console.log('Demo accounts:');
+  console.log('  Email: alice@vendorify.com  Password: password123');
+  console.log('  Email: bob@vendorify.com    Password: password123');
 }
 
 main()
   .catch((e) => {
-    console.error("âŒ Seed failed:", e);
+    console.error('âŒ Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {

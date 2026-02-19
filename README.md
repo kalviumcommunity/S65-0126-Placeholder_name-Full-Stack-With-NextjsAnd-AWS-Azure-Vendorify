@@ -286,7 +286,458 @@ Then visit:
 
 ---
 
-## 🐳 **Docker & Containerization**
+## 🐳 **Docker & Local Container Setup**
+
+### **Overview**
+Docker allows you to run the entire application (Next.js app, PostgreSQL, and Redis) in isolated containers. This ensures consistency across different machines and makes local development match production environments.
+
+---
+
+### **What is Docker?**
+Docker packages your application and its dependencies into a container—a lightweight, portable unit that runs the same way on any machine.
+
+**Benefits:**
+- ✅ Works the same on Windows, Mac, and Linux
+- ✅ No "works on my machine" problems
+- ✅ Easy onboarding for new developers
+- ✅ Matches production environment locally
+- ✅ Isolates dependencies (no conflicts between projects)
+
+---
+
+### **Understanding the Dockerfile**
+
+The project uses a **multi-stage Docker build** for efficiency:
+
+```dockerfile
+Stage 1 (deps):    base image + system libs + pnpm + dependencies
+                   ↓
+Stage 2 (builder): copy dependencies + source code + build Next.js
+                   ↓
+Stage 3 (runner):  standalone build + minimal runtime + non-root user
+                   ↓
+Final Image:       ~200MB (vs ~1GB without optimization)
+```
+
+**Each Stage Explained:**
+
+| Stage | Purpose | What Happens |
+|-------|---------|--------------|
+| **base** | Foundation | Starts with `node:20-alpine` (lightweight Node.js) |
+| **deps** | Dependencies | Installs system libraries (`libc6-compat`) and pnpm packages |
+| **builder** | Build | Compiles Next.js app and bundles for production |
+| **runner** | Runtime | Copies only necessary files, adds non-root user for security |
+
+**Key Features:**
+- ✅ **Multi-stage build** — Only production files in final image (~200MB)
+- ✅ **Alpine Linux** — Minimal base image (~40MB vs 150MB with regular Node)
+- ✅ **Non-root user** — Security best practice (runs as `nextjs` user, not `root`)
+- ✅ **Standalone output** — Next.js standalone server (no need for Node.js in production)
+- ✅ **Health checks** — Built-in curl for monitoring container health
+- ✅ **Production-ready** — Follows Docker and Next.js best practices
+
+**Dockerfile Breakdown:**
+```dockerfile
+FROM node:20-alpine AS base          # Start with Node 20 on Alpine Linux
+RUN apk add --no-cache libc6-compat # Add system library (required by Node)
+RUN npm install -g pnpm             # Install pnpm package manager
+COPY package.json pnpm-lock.yaml    # Copy dependency lock file
+RUN pnpm install                    # Install dependencies
+# ... continues through builder stage ...
+RUN pnpm run build                  # Compile Next.js app
+# ... runner stage copies only .next and public folders ...
+USER nextjs                         # Switch to non-root user
+EXPOSE 3000                         # Document port (doesn't publish it)
+CMD ["node", "server.js"]           # Start the app
+```
+
+---
+
+### **Understanding docker-compose.yml**
+
+Docker Compose lets you define multiple services (app, database, cache) and start them all with one command.
+
+The `docker-compose.yml` file defines:
+
+#### **1. App Service (Next.js)**
+```yaml
+app:
+  build: .                          # Build from local Dockerfile
+  ports:
+    - "3000:3000"                   # Port mapping: host:container
+  environment:
+    DATABASE_URL: postgresql://...  # Connection string for PostgreSQL
+    REDIS_URL: redis://redis:6379   # Connection string for Redis
+  depends_on:
+    postgres:
+      condition: service_healthy    # Wait for Postgres to be ready
+```
+
+**What this does:**
+- Builds the image from your local Dockerfile
+- Exposes port 3000 so you can access http://localhost:3000
+- Waits for database and cache before starting
+- Provides connection strings using service names (`postgres:5432`, `redis:6379`)
+
+#### **2. PostgreSQL Service**
+```yaml
+postgres:
+  image: postgres:15-alpine         # Use official PostgreSQL image
+  environment:
+    POSTGRES_USER: vendorify_user   # Database username
+    POSTGRES_PASSWORD: vendorify_password  # Database password
+    POSTGRES_DB: vendorify_db       # Database name
+  ports:
+    - "5432:5432"                   # Access database from host
+  volumes:
+    - postgres_data:/var/lib/postgresql/data  # Persistent storage
+```
+
+**What this does:**
+- Runs PostgreSQL 15 in a container
+- Creates a database named `vendorify_db`
+- Saves data even if container stops (using named volume)
+- Accessible at `postgres:5432` from other containers, or `localhost:5432` from your machine
+
+#### **3. Redis Service**
+```yaml
+redis:
+  image: redis:7-alpine             # Use official Redis image
+  command: redis-server --appendonly yes  # Enable persistence
+  ports:
+    - "6379:6379"                   # Access Redis from host
+  volumes:
+    - redis_data:/data              # Persistent storage
+```
+
+**What this does:**
+- Runs Redis 7 in a container
+- Enables data persistence (`appendonly yes`)
+- Accessible at `redis:6379` from other containers, or `localhost:6379` from your machine
+
+#### **4. Network & Volumes**
+```yaml
+networks:
+  vendorify-network:
+    driver: bridge                  # Services discover each other by name
+volumes:
+  postgres_data:                    # PostgreSQL persists data here
+  redis_data:                       # Redis persists data here
+```
+
+**What this does:**
+- **Bridge network** — Allows containers to communicate using service names (e.g., `postgres` instead of IP address)
+- **Named volumes** — Data persists on your host machine even if containers are deleted
+
+---
+
+### **Quick Start: Running with Docker Compose**
+
+#### **Prerequisites**
+- Install [Docker Desktop](https://www.docker.com/products/docker-desktop) (includes Docker and Docker Compose)
+- Make sure Docker is running
+
+#### **Step 1: Start All Services**
+```bash
+docker compose up --build
+```
+
+**What happens:**
+- Builds your Next.js image
+- Starts PostgreSQL container and waits for it to be healthy
+- Starts Redis container and waits for it to be healthy
+- Starts your Next.js app
+- Displays logs from all containers
+
+**Output example:**
+```
+vendorify-postgres | PostgreSQL Database Server started
+vendorify-redis    | Redis server ready
+vendorify-app      | ▲ Next.js started on 0.0.0.0:3000
+```
+
+#### **Step 2: Access the Application**
+Open your browser and go to **http://localhost:3000**
+
+#### **Step 3: Verify Services**
+Open a **new terminal** and check that everything is running:
+```bash
+docker compose ps
+```
+
+**Expected output:**
+```
+NAME                COMMAND              STATUS         PORTS
+vendorify-app       node server.js       Up (healthy)   0.0.0.0:3000->3000/tcp
+vendorify-postgres  postgres             Up (healthy)   0.0.0.0:5432->5432/tcp
+vendorify-redis     redis-server         Up (healthy)   0.0.0.0:6379->6379/tcp
+```
+
+#### **Step 4: Stop All Containers**
+```bash
+docker compose down
+```
+
+**Options:**
+```bash
+docker compose down                 # Stop and remove containers (volumes persist)
+docker compose down -v              # Stop containers AND delete volumes (clears all data!)
+docker compose stop                 # Just stop (don't remove)
+docker compose restart              # Restart running containers
+```
+
+---
+
+### **Testing Service Connectivity**
+
+#### **Test PostgreSQL Connection**
+```bash
+docker compose exec postgres psql -U vendorify_user -d vendorify_db -c "SELECT NOW();"
+```
+
+**Expected output:**
+```
+              now
+-------------------------------
+ 2024-02-14 12:34:56.789+00
+```
+
+#### **Test Redis Connection**
+```bash
+docker compose exec redis redis-cli ping
+```
+
+**Expected output:**
+```
+PONG
+```
+
+#### **Test App Connection**
+```bash
+# From your host machine
+curl http://localhost:3000
+
+# From inside the app container
+docker compose exec app curl http://localhost:3000
+```
+
+---
+
+### **Common Issues & Solutions**
+
+#### **❌ Error: "Cannot connect to Docker daemon"**
+**Problem:** Docker isn't running
+
+**Solution:**
+- Open Docker Desktop application
+- Wait for it to fully start (may take 30 seconds)
+- Try again: `docker compose up --build`
+
+---
+
+#### **❌ Error: "Port 3000 is already in use"**
+**Problem:** Another application is using port 3000
+
+**Identify the process:**
+```bash
+# MacOS/Linux
+lsof -i :3000
+
+# Windows (PowerShell)
+netstat -ano | findstr :3000
+```
+
+**Solutions:**
+1. **Stop the other application** (e.g., if `npm run dev` is running: `Ctrl+C`)
+2. **Or change the port** in `docker-compose.yml`:
+   ```yaml
+   ports:
+     - "3001:3000"  # Use 3001 instead
+   ```
+   Then access http://localhost:3001
+
+3. **Or kill the process:**
+   ```bash
+   # MacOS/Linux
+   kill -9 <PID>
+   
+   # Windows (PowerShell as admin)
+   Stop-Process -Id <PID> -Force
+   ```
+
+---
+
+#### **❌ Error: "postgres service is unhealthy"**
+**Problem:** PostgreSQL container couldn't start
+
+**Debug:**
+```bash
+docker compose logs postgres
+```
+
+**Common causes:**
+- Previous container didn't clean up properly
+- Volume corruption
+
+**Solution:**
+```bash
+# Remove old containers and volumes
+docker compose down -v
+
+# Restart fresh
+docker compose up --build
+```
+
+---
+
+#### **❌ Error: "Cannot find module" or build errors**
+**Problem:** Dependencies changed or cache is stale
+
+**Solution:**
+```bash
+# Force rebuild without using cache
+docker compose up --build --no-cache
+```
+
+Or clean everything:
+```bash
+# Delete all Docker images and start fresh
+docker compose down -v
+docker image rm vendorify-app
+docker compose up --build
+```
+
+---
+
+#### **❌ Slow first build (takes 5+ minutes)**
+**Problem:** Docker is downloading and installing everything for the first time
+
+**Why it's slow:**
+- Downloading Node.js 20 Alpine image (~200MB)
+- Installing pnpm and all npm dependencies
+- Compiling Next.js app
+
+**Subsequent builds are much faster** (uses cache)
+
+**Speed up by using BuildKit:**
+```bash
+# Enable Docker BuildKit (builds faster, more efficient)
+DOCKER_BUILDKIT=1 docker compose up --build
+```
+
+---
+
+#### **❌ Database connection errors at startup**
+**Problem:** App starts before PostgreSQL is ready
+
+**Solution:** It's already handled! The `depends_on` section waits for health checks:
+```yaml
+depends_on:
+  postgres:
+    condition: service_healthy
+```
+
+But if you still get errors:
+- Wait a few seconds and hard-refresh your browser (Cmd+Shift+R or Ctrl+Shift+R)
+- Check logs: `docker compose logs app`
+
+---
+
+### **Useful Docker Compose Commands**
+
+```bash
+# Start all services
+docker compose up
+
+# Start in background
+docker compose up -d
+
+# Start and rebuild images
+docker compose up --build
+
+# View logs from all services
+docker compose logs
+
+# View logs from one service
+docker compose logs app
+docker compose logs postgres
+docker compose logs redis
+
+# Follow logs in real-time
+docker compose logs -f
+
+# Stop all containers
+docker compose stop
+
+# Stop and remove containers
+docker compose down
+
+# Stop and remove containers + volumes (DELETES DATA!)
+docker compose down -v
+
+# Execute a command in a running container
+docker compose exec app npm run build
+docker compose exec postgres psql -U vendorify_user -d vendorify_db
+
+# Restart a service
+docker compose restart app
+
+# View container status
+docker compose ps
+```
+
+---
+
+### **Persisting Data**
+
+Data in named volumes survives container restarts:
+```bash
+docker compose stop      # Containers stop, data persists
+docker compose start     # Containers restart with same data
+```
+
+But data is deleted when you run:
+```bash
+docker compose down -v   # ⚠️ This deletes data!
+```
+
+---
+
+### **Development Workflow with Docker**
+
+#### **For Beginners: Just Use Docker**
+```bash
+docker compose up --build   # One command!
+# Access app at http://localhost:3000
+```
+
+#### **Enable Hot Reload (optional)**
+If you want code changes to reload automatically inside Docker:
+
+Add to `docker-compose.yml` under the `app` service:
+```yaml
+volumes:
+  - .:/app                  # Mount current directory
+  - /app/node_modules       # Except node_modules
+```
+
+Then restart:
+```bash
+docker compose up --build
+```
+
+Now when you edit files, the app reloads automatically.
+
+#### **Without Docker (Local npm)**
+If you prefer running locally without Docker:
+```bash
+pnpm install
+pnpm run dev
+```
+
+But then you need PostgreSQL and Redis running locally too. Docker Compose is easier!
+
+---
 
 ### **Multi-Stage Docker Build**
 The application uses an optimized multi-stage Docker build:

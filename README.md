@@ -481,3 +481,165 @@ Validation checklist
 
 Short explanation
 - Keep secrets on the server and public configuration in `NEXT_PUBLIC_` variables. Use `.env.example` to share what needs to be set, and keep `.env.local` out of source control.
+
+---
+
+## 👥 Team Workflow & PR Process
+
+### 🌳 Branch Naming Strategy
+
+We use **consistent branch names** to keep our workflow organized and clear. This helps everyone understand what each branch is doing without confusion.
+
+**Branch Types:**
+
+| Type | Format | Example |
+|------|--------|---------|
+| **Feature** | `feature/<feature-name>` | `feature/user-authentication` |
+| **Bug Fix** | `fix/<bug-name>` | `fix/navbar-responsive-layout` |
+| **Maintenance** | `chore/<task-name>` | `chore/update-dependencies` |
+| **Documentation** | `docs/<update-name>` | `docs/readme-setup` |
+
+**Branch Naming Rules:**
+- ✅ Use **lowercase** (not `Feature/userAuth`)
+- ✅ Use **hyphens** to separate words (not underscores)
+- ✅ Keep it **descriptive but concise** (30-50 characters)
+- ❌ Don't commit directly to `main` — always use a branch
+
+**Quick Start:**
+```bash
+# Create your feature branch
+git checkout -b feature/vendor-search
+
+# Work, commit, and push
+git add .
+git commit -m "feat: add vendor search filter"
+git push origin feature/vendor-search
+
+# Create Pull Request on GitHub
+# Request review from a teammate
+# After approval, merge to main
+```
+
+For more details, see [Branch Naming Conventions](.github/BRANCH_NAMING_CONVENTIONS.md).
+
+---
+
+### 📋 Pull Request Template
+
+Every PR should include:
+
+1. **Summary** — What does this PR do?
+2. **Changes Made** — What specifically changed?
+3. **Screenshots** — Visual evidence (for UI changes)
+4. **Checklist** — Code quality, testing, security verification
+5. **Related Issue** — Link to GitHub issue (if applicable)
+
+The PR template is automatically loaded when you create a new PR. Just fill it out honestly — this helps reviewers understand your work.
+
+**What the checklist includes:**
+- ✅ ESLint and Prettier pass
+- ✅ No console errors
+- ✅ Code follows folder structure (`src/components/`, `src/lib/`, `src/app/`)
+- ✅ No sensitive data exposed
+- ✅ Branch name follows conventions
+- ✅ TypeScript builds without errors
+
+See [Pull Request Template](.github/pull_request_template.md) for details.
+
+---
+
+### 👀 Code Review Checklist
+
+**As a Reviewer:**
+- ✅ Code is readable and follows team standards
+- ✅ No ESLint errors or TypeScript issues
+- ✅ No hardcoded secrets or sensitive data
+- ✅ Tests work locally (`npm run dev`)
+- ✅ Changes don't break existing features
+- ✅ Comments are kind and constructive
+
+**As a PR Author:**
+- 🤝 Respond to feedback respectfully
+- 🔧 Make requested changes promptly
+- ❓ Ask questions if feedback is unclear
+- ✅ Self-review before requesting review
+
+**Code Review Best Practices:**
+- Be kind and respectful — assume good intent
+- Ask questions instead of making demands
+- Suggest alternatives if you see better approaches
+- Praise good work — specific compliments help learning
+
+See [Code Review Checklist](.github/CODE_REVIEW_CHECKLIST.md) for the complete review guide.
+
+---
+
+### 🔒 Branch Protection & Merging
+
+**To protect `main` branch:**
+
+Protected branches prevent accidental changes and ensure quality gates. Our `main` branch requires:
+
+- ✅ **At least 1 code review approval** — Two sets of eyes catch mistakes
+- ✅ **All automated checks pass** — ESLint and TypeScript must succeed
+- ✅ **Branch is up to date** — Must be updated with latest `main`
+- ❌ **No direct pushes allowed** — All changes go through PRs
+
+**Merging a PR:**
+
+1. All checks pass ✓
+2. At least 1 teammate approves ✓
+3. Branch is up to date ✓
+4. Click **"Merge pull request"** on GitHub
+5. Branch is automatically deleted
+
+**If your PR is "out of date":**
+- GitHub shows: "This branch is out of date"
+- Click "Update branch" button to sync with latest `main`
+- Then merge normally
+
+See [Branch Protection Setup](.github/BRANCH_PROTECTION_SETUP.md) for detailed setup instructions.
+
+---
+
+### 💡 Why This Workflow Improves Quality & Collaboration
+
+#### **Clarity** 🎯
+- Branch names tell everyone what's being worked on
+- PR descriptions explain why changes were made
+- No confusion about which feature is which
+
+#### **Collaboration** 👥
+- Multiple team members work on different features simultaneously
+- Code reviews share knowledge across the team
+- Reviewers learn from each other's approaches
+- New members onboard faster with clear patterns
+
+#### **Quality** ✨
+- Code reviews catch bugs before production
+- Automated checks ensure code standards are met
+- Protected branches prevent accidental mistakes
+- ESLint/Prettier enforce consistent style automatically
+
+#### **Maintainability** 🔧
+- Git history clearly shows who did what and why
+- Branch names make it easy to find related changes
+- PR history documents all decisions and discussions
+- Easier to revert changes if needed (with context)
+
+#### **Safety** 🛡️
+- Sensitive data never reaches `main` because of reviews
+- Broken code can't merge without passing checks
+- Changes are tracked and can be audited
+- Everyone has a shared understanding of code standards
+
+---
+
+### 📚 Related Documentation
+
+- [Branch Naming Conventions](.github/BRANCH_NAMING_CONVENTIONS.md) — Detailed branch types and examples
+- [Pull Request Template](.github/pull_request_template.md) — Sections to include in every PR
+- [Code Review Checklist](.github/CODE_REVIEW_CHECKLIST.md) — What to verify when reviewing
+- [Branch Protection Setup](.github/BRANCH_PROTECTION_SETUP.md) — How to configure GitHub protection rules
+
+---

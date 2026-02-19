@@ -17,6 +17,8 @@
  * or any content that must be current.
  */
 
+import Link from "next/link";
+
 export const dynamic = 'force-dynamic'; // Force SSR—render every request
 export const revalidate = 0; // No caching
 
@@ -73,13 +75,13 @@ export default async function DashboardPage() {
       {/* UI IMPROVEMENT: High-contrast styling for end-of-page info box */}
       <div style={{ background: '#3730a3', color: '#ffffff', padding: '1rem', marginTop: '1rem', borderRadius: '4px', borderLeft: '4px solid #a78bfa' }}>
         <p style={{ margin: 0, fontSize: '0.9rem', color: '#e9d5ff' }}>
-          <strong>Technical Details:</strong> This page uses `dynamic = 'force-dynamic'` 
-          and `cache: 'no-store'` to bypass all Next.js caching.
+          <strong>Technical Details:</strong> This page uses &apos;dynamic = &apos;force-dynamic&apos;&apos; 
+          and &apos;cache: &apos;no-store&apos;&apos; to bypass all Next.js caching.
         </p>
       </div>
 
       <nav style={{ marginTop: '2rem' }}>
-        <a href="/">← Home</a> | <a href="/about">About (SSG)</a> | <a href="/vendors">Vendors (ISR) →</a>
+        <Link href="/">← Home</Link> | <Link href="/about">About (SSG)</Link> | <Link href="/vendors">Vendors (ISR) →</Link>
       </nav>
     </div>
   );

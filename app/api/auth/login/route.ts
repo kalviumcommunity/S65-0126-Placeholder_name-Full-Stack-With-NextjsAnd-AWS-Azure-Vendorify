@@ -53,7 +53,12 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[POST /api/auth/login]', error);
+    // Log the full error so it appears in Vercel's function log viewer.
+    console.error('[POST /api/auth/login] Unhandled error:', {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      name: (error as Error).name,
+    });
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

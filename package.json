@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "build:staging": "dotenv -e .env.staging -- next build",
     "build:production": "dotenv -e .env.production -- next build",
     "start": "next start",

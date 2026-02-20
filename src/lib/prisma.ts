@@ -1,26 +1,32 @@
 import { PrismaClient } from '@prisma/client';
 
-// Extend globalThis type so TypeScript strict mode doesn't complain.
+// ─── TypeScript global augmentation ──────────────────────────────────────────
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var __prisma: PrismaClient | undefined;
 }
 
-// In serverless environments (Vercel) every cold-start imports this module
-// fresh, so a bare `new PrismaClient()` is fine for production. In development,
-// Next.js hot-reload re-evaluates modules on every change — without the
-// globalThis cache this would exhaust the PostgreSQL connection pool quickly.
-const prismaClientSingleton = () =>
-  new PrismaClient({
+// ─── Singleton factory ────────────────────────────────────────────────────────
+// Vercel Lambda: each cold-start evaluates this module once; subsequent warm
+// requests on the same instance reuse the Node module cache, so the module-level
+// `const prisma` is the effective singleton inside a single Lambda container.
+//
+// Dev: Next.js hot-reload clears the module cache on every file change, creating
+// a new PrismaClient each time and quickly exhausting the connection pool.
+// The globalThis cache prevents that.
+//
+function createPrismaClient() {
+  return new PrismaClient({
     log:
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
         : ['error'],
   });
+}
 
 export const prisma: PrismaClient =
-  globalThis.prisma ?? prismaClientSingleton();
+  globalThis.__prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
+  globalThis.__prisma = prisma;
 }

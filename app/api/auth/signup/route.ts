@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/src/lib/prisma';
 import { hashPassword, signToken } from '@/src/lib/auth';
+
+// ─── Env-var guard (caught by the module-level check in prisma.ts, but guard
+//     JWT_SECRET here too so the error surfaces in this route's stack trace)
+if (!process.env.JWT_SECRET) {
+  console.warn(
+    '[signup] JWT_SECRET is not set — using insecure fallback. ' +
+      'Set JWT_SECRET in your Vercel environment variables.'
+  );
+}
 
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
@@ -26,18 +36,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists.' },
-        { status: 409 }
-      );
-    }
-
+    // Prisma unique-constraint violation (P2002) is faster than a pre-check
+    // query, and is race-condition-safe.
     const hashed = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: { name, email, password: hashed },
-    });
+
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: { name, email, password: hashed },
+      });
+    } catch (dbError) {
+      if (
+        dbError instanceof Prisma.PrismaClientKnownRequestError &&
+        dbError.code === 'P2002'
+      ) {
+        return NextResponse.json(
+          { error: 'An account with this email already exists.' },
+          { status: 409 }
+        );
+      }
+      // Surface real DB errors clearly in Vercel logs
+      console.error('[POST /api/auth/signup] Database error:', {
+        message: (dbError as Error).message,
+        code: (dbError as Prisma.PrismaClientKnownRequestError).code,
+        stack: (dbError as Error).stack,
+      });
+      throw dbError;
+    }
 
     const token = await signToken({
       userId: user.id,
@@ -63,7 +88,12 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[POST /api/auth/signup]', error);
+    // Log the full error so it appears in Vercel's function log viewer.
+    console.error('[POST /api/auth/signup] Unhandled error:', {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      name: (error as Error).name,
+    });
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

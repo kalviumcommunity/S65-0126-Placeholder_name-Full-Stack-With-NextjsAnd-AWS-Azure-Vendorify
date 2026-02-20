@@ -1,0 +1,11 @@
+# Explicitly prevent local env files from being uploaded to Vercel.
+# Real secrets must be set via Vercel dashboard or `vercel env add`.
+.env
+.env.local
+.env.development
+.env.staging
+.env.production.local
+
+# Keep these out of deployments too
+*.log
+node_modules
